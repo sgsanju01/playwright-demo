@@ -1,0 +1,29 @@
+trigger:
+- main  # Jab bhi main branch pe push hoga, pipeline chalegi
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm install
+    npx playwright install --with-deps
+  displayName: 'Install Dependencies & Playwright'
+
+- script: |
+    npx playwright test
+  displayName: 'Run Playwright Tests'
+
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/results.xml' # Ensure your playwright config outputs JUnit
+    mergeTestResults: true
+    failTaskOnFailedTests: true
+  displayName: 'Publish Test Results'
